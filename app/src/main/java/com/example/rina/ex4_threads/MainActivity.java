@@ -1,9 +1,20 @@
 package com.example.rina.ex4_threads;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
+
 
 public class MainActivity extends AppCompatActivity {
+
+    @Nullable
+    private static Boolean isLeftStep = true;
+    @Nullable
+    private Thread leftThread;
+    @Nullable
+    private Thread rightThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -14,24 +25,88 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        new Thread(new LeftLeg()).start();
-        new Thread(new RightLeg()).start();
+
+        leftThread = new Thread(new LeftLeg());
+        leftThread.start();
+        rightThread = new Thread(new RightLeg());
+        rightThread.start();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (leftThread != null) {
+            leftThread.interrupt();
+        }
+        leftThread = null;
+
+        if (rightThread != null) {
+            rightThread.interrupt();
+        }
+        rightThread = null;
     }
 
     private class LeftLeg implements Runnable {
-        private boolean isRunning = true;
+        @NonNull
+        private Boolean isRunning = true;
+
         @Override
         public void run() {
-            while (isRunning) System.out.println("Left step");
+            while (isRunning) {
+                if (Thread.interrupted()) return;
+                synchronized (isLeftStep) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                           setText("Left thread is running");
+                        }
+                    });
+                    if (isLeftStep) {
+                        System.out.println("Left step");
+                        isLeftStep = false;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private class RightLeg implements Runnable {
-        private boolean isRunning = true;
+        @NonNull
+        private Boolean isRunning = true;
+
         @Override
         public void run() {
-            while (isRunning) System.out.println("Right step");
+            while (isRunning) {
+                if (Thread.interrupted()) return;
+                synchronized (isLeftStep) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setText("Right thread is running");
+                        }
+                    });
+                    if (!isLeftStep) {
+                        System.out.println("Right step");
+                        isLeftStep = true;
+                    }
+                    //try {
+                       // Thread.sleep(1000);
+                    //} catch (InterruptedException e) {
+                       // e.printStackTrace();
+                    //}
+                }
+            }
         }
     }
 
+    private void setText(String text){
+        TextView textView = findViewById(R.id.tv_text);
+        textView.setText(text);
+    }
 }
