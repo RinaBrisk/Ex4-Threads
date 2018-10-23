@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
                 if (Thread.interrupted()) return;
                 synchronized (lock) {
                     if (isLeftStep) {
-                        System.out.println("Left step");
                         isLeftStep = false;
 
                         runOnUiThread(new Runnable() {
@@ -78,12 +77,12 @@ public class MainActivity extends AppCompatActivity {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                            System.out.println("Left step ended");
-                        }
+
                     }
                 }
             }
         }
+    }
 
     private class RightLeg implements Runnable {
         Boolean isRunning = true;
@@ -94,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
                 if (Thread.interrupted()) return;
                 synchronized (lock) {
                     if (!isLeftStep) {
-                        System.out.println("Right step");
                         isLeftStep = true;
 
                         runOnUiThread(new Runnable() {
@@ -103,14 +101,11 @@ public class MainActivity extends AppCompatActivity {
                                 setText("right thread is running");
                             }
                         });
-
                         try {
                             Thread.sleep(2000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-
-                        System.out.println("Right step ended");
                     }
                 }
             }
